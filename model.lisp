@@ -184,9 +184,9 @@
 ==>
     =goal>
         state who-am-i
-    +retrieval>
-        :recently-retrieved nil
-        kind oval
+    ;+retrieval>
+    ;    :recently-retrieved nil
+    ;    kind oval
 )
 
 (p do-i-move
@@ -196,6 +196,8 @@
     ?manual>
         state free
     =visual>
+    ?retrieval>
+        state free
 ==>
     =visual>
         cmd start-tracking
@@ -214,11 +216,11 @@
     =goal>
         state did-i-move
         intention request
-    ?retrieval>
-       state free
+    ;?retrieval>
+    ;   state free
     ?visual-location>
-    ;-  buffer failure
-    -   state error
+    -  buffer failure
+    ;-   state error
 
 ==>
     +retrieval>
