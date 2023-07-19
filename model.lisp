@@ -13,6 +13,7 @@
 (chunk-type tile color type screen-x screen-y)
 
 (set-visloc-default screen-y lowest kind oval)
+(set-parameter-value :visual-num-finsts 25)
 
 
 (add-dm
@@ -99,7 +100,6 @@
 
 
 )
-
 
 (p check-for-others-tiles
     =goal>
@@ -347,6 +347,8 @@
     ?visual-location>
         ;buffer failure
         state error
+    ?visual>
+        state busy
 ==>
     =goal>
         state search-goal
@@ -357,9 +359,10 @@
     ;    :attended nil
     ;    - color =body
     ;    kind oval
-    ;+visual>
-    ;    cmd clear
-    
+
+    -visual-location>
+    +visual>
+        cmd clear
 )
 
 (p initial-scan-request
@@ -367,40 +370,66 @@
         state  search-goal
         intention scan
         color =body
+    ?visual>
+        state free
 ==>
     +visual-location>
         :attended nil
         - color =body
         kind oval
-    ;+visual>
-    ;    cmd clear
+    =goal>
+        intention attend
+
+
 )
 
 (p initial-scan-attend
     =goal>
         state  search-goal
-        intention scan
+        intention attend
         color =body
     =visual-location>
     -   color =body
         kind oval
-
+    ?visual>
+        state free
 ==>
     +visual>
         cmd move-attention
         screen-pos =visual-location
+    =goal>
+        intention scan
 )
 
 (p initial-scan-stop
     =goal>
         state search-goal
-        intention scan
+        intention attend
+        color =body
     ?visual-location>
         state error
 ==>
     =goal>
         state search-goal
-        intention move)
+        ;intention move
+        intention track-body
+    +visual-location>
+        color =body
+        kind oval
+
+)
+(p initial-scan-track-body
+    =goal>
+        state search-goal
+        intention track-body
+        color =body
+    =visual-location>
+==>
+    +visual>
+        cmd start-tracking
+    =goal>
+        intention move
+)
 
 (p moveleft
     =goal>
