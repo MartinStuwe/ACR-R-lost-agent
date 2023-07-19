@@ -1,0 +1,465 @@
+(clear-all)
+
+(define-model lost-agent
+
+(sgp :egs 0.2)  ; Dieses Modell verwendet Utility. Der utility noise kann ausgeschaltet werden, indem dieser Parameter auf 0 gesetzt wird.
+(sgp :esc t)    ; Dieses Modell verwendet subsymbolische Verarbeitung
+
+(sgp :v t :show-focus t :trace-detail high)
+
+(chunk-type goal state intention)
+(chunk-type control intention button)
+(chunk-type tile-type color type)
+(chunk-type tile color type screen-x screen-y)
+
+(set-visloc-default screen-y lowest kind oval)
+
+
+(add-dm
+    (move-left) (move-right)
+    (move-up)  (move-down)
+    (w) (a) (s) (d)
+    (i-dont-know-who-i-am)
+    (tile-distance) (color-meaning)
+    (i-dont-know-where-to-go)
+    (something-should-change)
+    (i-want-to-do-something)
+    (up-control isa control intention move-up button w)
+    (down-control isa control intention move-down button s)
+    (left-control isa control intention move-left button a)
+    (right-control isa control intention move-right button d)
+    (first-goal isa goal state i-dont-know-who-i-am)
+
+    (goal-tile isa tile-type color green type goal)
+    (reward-tile isa tile-type color type type reward)
+    (trap-tile isa tile-type color unknown type trap)
+    (block-tile isa tile-type color unknown type block)
+
+    
+
+)
+
+(goal-focus first-goal)
+
+
+
+;Identify Actuator Tile
+(p try-to-locate-myself
+
+    =goal>
+    state i-dont-know-who-i-am
+
+    =visual-location>
+        isa visual-location
+        kind oval
+        screen-x =x
+        screen-y =y
+        color =color
+
+    ?visual>
+        state free
+    ?imaginal>
+        state free
+    ==>
+
+    =goal>
+        state check-for-others
+
+    +visual>
+        cmd move-attention
+        screen-pos =visual-location
+
+    +imaginal>
+        isa tile
+        color =color
+        screen-x =x
+        screen-y =y
+)
+
+
+(p check-for-others-tiles
+    =goal>
+        state check-for-others
+   ; -   intention attend
+    ;-   intention retrieve
+    =visual>
+    =visual-location>
+        screen-y =y
+    ?visual-location>
+       - buffer failure
+==>
+    =goal>
+        state check-for-others
+        intention attend
+    +visual>
+        cmd move-attention
+        screen-pos =visual-location
+    +visual-location>
+        :attended nil  
+        screen-y =y
+        kind oval
+
+)
+
+;(p attend-other-tiles
+;    =goal>
+;        state check-for-others
+;        intention attend
+;    =visual-location>
+;    ==>
+;    +visual>
+;        cmd move-attention
+;        screen-pos =visual-location
+;    +retrieval>
+;        oval t
+;    =goal>
+;        state retrieve
+;    )
+
+;(p retrieval-check
+;    =goal>
+;        state retrieve
+;    =retrieval>
+;        oval t
+;    ==>
+;    =goal>
+;        state check-for-others
+;        intention retrieve
+;    )
+
+
+;(P no-other-bodies
+;    =goal>
+;        state check-for-others
+;    ?visual-location>
+;        buffer failure
+;    =imaginal>
+;        color =color
+;==>
+;    =goal>
+;        state i-found-myself
+;        color =color
+;
+;    +imaginal>
+;        isa tile
+;        color =color
+;        type body
+;)
+
+(P no-more-bodies
+    =goal>
+        state check-for-others
+    ?visual-location>
+        buffer failure
+==>
+    =goal>
+        state who-am-i
+    +retrieval>
+        :recently-retrieved nil
+        kind oval
+)
+
+(p do-i-move
+    =goal>
+        state who-am-i
+    -   intention do-i-move
+    ?manual>
+        state free
+    =visual>
+==>
+    =visual>
+        cmd start-tracking
+    +manual>
+        cmd press-key
+        key s
+    =goal>
+        state did-i-move
+        intention request
+    +retrieval>
+        :recently-retrieved nil
+        kind oval
+)
+
+(p did-i-move-request
+    =goal>
+        state did-i-move
+        intention request
+    ?retrieval>
+       state free
+    ?visual-location>
+    -  buffer failure
+
+==>
+    +retrieval>
+        kind oval
+        :recently-retrieved nil
+    =goal>
+        intention check
+)
+
+
+(p did-i-move
+    =goal>
+        state did-i-move
+        intention check
+
+    =retrieval>
+        color =color2
+        screen-x =x
+        screen-y =y
+        kind oval
+    
+==>
+    =retrieval>
+
+    +visual-location>
+        color =color2
+        screen-x =x
+        screen-y =y
+        kind oval
+        ;attended :nil
+    =goal>
+        intention request
+)
+
+(p i-moved-this
+    =goal>
+        state did-i-move
+        intention request
+    =retrieval>
+        color =color
+        screen-x =x
+        screen-y =y
+        kind oval
+    ?visual-location>
+    ;    state error
+        buffer failure
+    ==>
+    =goal>
+        state i-am-this
+        intention locate
+        color =color    
+    +imaginal>
+        isa tile-type
+        color =color
+        type body
+    -visual-location>
+    +visual-location>
+        color =color
+        kind oval
+
+    )
+
+(p track-body-request
+    =goal>
+        state i-am-this
+        intention locate
+    =imaginal>
+        type body
+        color =color
+    =visual-location>
+    ==>
+    +visual>
+        cmd move-attention
+        screen-pos =visual-location
+    =goal>
+        intention track
+    )
+
+(p track-body-track
+    =goal>
+        state i-am-this
+        intention track
+    =visual>
+    ==>
+    +visual>
+        cmd start-tracking
+    +manual>
+        cmd press-key
+        key s
+    =goal>
+        state find-goal
+    +retrieval>
+        isa tile-type
+        type goal
+)
+
+(p search-goal
+    =goal>
+        state find-goal
+    =retrieval>
+        isa tile-type
+        type goal
+        color =col
+    ==>
+    +visual-location>
+        kind oval
+        color =col
+    =retrieval>
+)
+
+(p found-goal
+    =goal>
+        state find-goal
+    =retrieval>
+        isa tile-type
+        type goal
+        color =col
+    =visual-location>
+        kind oval
+        color =col
+    ==>
+    =goal>
+        state move-to-goal
+        intention find-direction
+    !output! "I found the goal"
+    =visual-location>
+    )
+
+
+
+(p goal-check1
+    =goal>
+        state move-to-goal
+        intention find-direction
+    =visual>
+        oval t
+        screen-pos =visloc-chunk
+    =visual-location>
+        kind oval
+        color green
+        screen-x =x
+        screen-y =y
+    ;=retrieval>
+        
+    ==>
+    ;-visual-location>
+    +retrieval>
+        kind oval
+        color green
+        
+        !output! "y"
+        !output! =y
+        !output! "x"
+        !output! =x
+    =goal>
+        state move-to-goal
+        intention move
+
+)
+
+(p goal-check-down
+    =goal>
+        state move-to-goal
+        intention move
+    =visual-location>
+        screen-x =x1
+        screen-y =y1
+    =retrieval>
+            screen-x =x2
+        >   screen-y =y1
+                color =goalcolor
+
+==>
+    +manual>
+        cmd press-key
+        key s
+    =goal>
+        intention find-direction
+       +visual-location>
+        kind oval
+        color =goalcolor
+    )
+
+
+(p goal-check-up
+    =goal>
+        state move-to-goal
+        intention move
+    =visual-location>
+        screen-x =x1
+        screen-y =y1
+    =retrieval>
+            screen-x =x2
+        <   screen-y =y1
+                color =goalcolor
+
+==>
+    +manual>
+        cmd press-key
+        key w
+    =goal>
+        intention find-direction
+       +visual-location>
+        kind oval
+        color =goalcolor
+
+    )
+
+
+(p goal-check-left
+    =goal>
+        state move-to-goal
+        intention move
+    =visual-location>
+        screen-x =x1
+        screen-y =y1
+    =retrieval>
+    <    screen-x =x1
+        screen-y =y2
+                color    =goalcolor
+
+    ==>
+        +manual>
+            cmd press-key
+            key a
+        =goal>
+            intention find-direction
+    +visual-location>
+        kind oval
+        color =goalcolor
+
+    )
+
+
+(p goal-check-right
+    =goal>
+        state move-to-goal
+        intention move
+    =visual-location>
+        screen-x =x1
+        screen-y =y1
+    =retrieval>
+    >   screen-x =x1
+        screen-y =y2
+        color    =goalcolor
+==>
+    +manual>
+        cmd press-key
+        key d
+    =goal>
+        intention find-direction
+    +visual-location>
+        kind oval
+        color =goalcolor
+
+    )
+
+;(p goal-up)
+;(goal-right)
+;(goal-left)
+
+
+;(p track-to-move
+;    =goal>
+;        state i-track-myself
+;    ==>
+;    =goal>
+;        state i-want-to-move        
+;)
+
+;How to connect to random moves?
+;(p move-randomly)
+
+
+)
