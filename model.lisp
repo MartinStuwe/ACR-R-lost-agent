@@ -133,7 +133,6 @@
         screen-y highest
 )
 
-
 (p save-lower-border
     =goal>
         state i-dont-know-the-board
@@ -471,7 +470,6 @@
         intention check
 )
 
-
 (p not-found-goal
     =goal>
         state find-goal
@@ -503,11 +501,32 @@
     -   color =goalcol
 )
 
+
+(p move visual-location-into-bounded-imaginal
+    =goal>
+        state search-goal
+        intention interact
+        bodycolor =bodycol
+        goalcolor =goalcol
+    =visual-location>
+        kind oval
+    -   color =bodycol
+    -   color =goalcol
+        color =tilecolor
+        screen-x =x 
+        screen-y =y
+==>
+    +imaginal>
+        leftbound =x
+        rightbound =x 
+        upbound =y 
+        downbound =y
+)
+
 (p i-want-to-move-to-this-position-range
     =goal>
         state search-goal
         intention interact
-
         bodycolor =bodycol
         goalcolor =goalcol
     =imaginal>
@@ -522,6 +541,25 @@
         color =bodycolor
 )
 
+;(p block-tile-check
+;    =goal>
+;        state
+;        intention
+;    I DIDN'T MOVE
+;    =visual-location>
+;    same as before    
+;)
+
+;(p reward-tile-check
+;    +visual-location>
+;        kind text
+;        color red
+;    color red kind text value '+'
+;)
+
+;(p penalty-tile-check
+;    color red kind text value '-'
+;)
 
 
 (p leftcheck
@@ -567,7 +605,7 @@
         kind oval
         color =bodycolor
     >   screen-x =leftbound
-    
+
 ==>
     +manual>
         cmd press-key
@@ -747,14 +785,25 @@
         state find-goal
         intention check
         goalcolor =goalcol
+        bodycolor =bodycol
     =visual-location>
         kind oval
         color =goalcol
+        screen-x =x
+        screen-y =y
     ==>
     =goal>
         state move-to-goal
         intention find-direction
-    =visual-location>
+    +visual-location>
+        color =bodycol
+        kind oval
+    +imaginal>
+        leftbound =x
+        rightbound =x
+        upbound =y
+        downbound =y
+
 )
 
 
@@ -762,21 +811,21 @@
     =goal>
         state move-to-goal
         intention find-direction
-    =visual-location>
-        kind oval
-        color =col
-        screen-x =x
-        screen-y =y 
+    =imaginal>
+        leftbound =x
+        rightbound =x
+        upbound =y
+        downbound =y
     ?retrieval>
         state free
     ==>
-    +retrieval>
-        kind oval
-        color =col
     =goal>
         state move-to-goal
         intention move
+    =imaginal>
 )
+
+
 
 
 (p target-tile-check-down
@@ -785,12 +834,13 @@
         intention move
 
     =visual-location>
-        screen-x =x1
-        screen-y =y1
-    =retrieval>
-        screen-x =x2
-    >   screen-y =y1
-        color =targetcolor
+        screen-x =x
+        screen-y =y
+    =imaginal>
+        ;leftbound =x
+        ;rightbound =x
+    >    upbound =y
+    >    downbound =y
 
     ?manual>
         state free
@@ -800,9 +850,7 @@
         key s
     =goal>
         intention find-direction
-    +visual-location>
-        kind oval
-        color =targetcolor
+    =imaginal>
 )
 
 (p target-tile-check-up
@@ -810,12 +858,14 @@
         state move-to-goal
         intention move
     =visual-location>
-        screen-x =x1
-        screen-y =y1
-    =retrieval>
-            screen-x =x2
-        <   screen-y =y1
-            color =targetcolor
+        screen-x =x
+        screen-y =y
+    
+    =imaginal>
+        ;leftbound =x
+        ;rightbound =x
+    <    upbound =y
+    <    downbound =y
     ?manual>
         state free
 ==>
@@ -824,9 +874,7 @@
         key w
     =goal>
         intention find-direction
-    +visual-location>
-        kind oval
-        color =targetcolor
+    =imaginal>
 )
 
 
@@ -835,12 +883,14 @@
         state move-to-goal
         intention move
     =visual-location>
-        screen-x =x1
-        screen-y =y1
-    =retrieval>
-    <    screen-x =x1
-        screen-y =y2
-        color    =targetcolor
+        screen-x =x
+        screen-y =y
+
+    =imaginal>
+    <   leftbound =x
+    <   rightbound =x
+        ;upbound =y
+        ;downbound =y
     ?manual>
         state free
 ==>
@@ -849,9 +899,7 @@
         key a
     =goal>
         intention find-direction
-    +visual-location>
-        kind oval
-        color =targetcolor
+    =imaginal>
 )
 
 
@@ -860,12 +908,15 @@
         state move-to-goal
         intention move
     =visual-location>
-        screen-x =x1
-        screen-y =y1
-    =retrieval>
-    >   screen-x =x1
-        screen-y =y2
-        color    =targetcolor
+        screen-x =x
+        screen-y =y
+
+    =imaginal>
+    >   leftbound =x
+    >  rightbound =x
+        ;upbound =y
+        ;downbound =y
+    
     ?manual>
             state free
 ==>
@@ -874,9 +925,7 @@
         key d
     =goal>
         intention find-direction
-    +visual-location>
-        kind oval
-        color =targetcolor
+    =imaginal>
 )
 
 
