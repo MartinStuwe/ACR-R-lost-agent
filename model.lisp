@@ -307,9 +307,6 @@
     =goal>
         state did-i-move
         intention request
-    +retrieval>
-        :recently-retrieved nil
-        kind oval
 )
 
 (p did-i-move-request
@@ -318,8 +315,12 @@
         intention request
     ?visual-location>
     -  buffer failure
+    =visual-location>
     ?retrieval>
         state free
+    ?manual>
+        state free
+    
 ==>
     +retrieval>
         kind oval
@@ -339,6 +340,9 @@
         screen-x =x
         screen-y =y
         kind oval
+    
+    ?retrieval>
+        state free
     
 ==>
     =retrieval>
@@ -632,10 +636,10 @@
     =goal>
         state find-goal
         intention check
-        goalcolor =col
+        goalcolor =goalcol
     =visual-location>
         kind oval
-        color =col
+        color =goalcol
     ==>
     =goal>
         state move-to-goal
@@ -644,7 +648,7 @@
 )
 
 
-(p goal-check1
+(p target-check
     =goal>
         state move-to-goal
         intention find-direction
@@ -669,17 +673,19 @@
 )
 
 
-(p goal-check-down
+(p target-check-down
     =goal>
         state move-to-goal
         intention move
+
     =visual-location>
         screen-x =x1
         screen-y =y1
     =retrieval>
-            screen-x =x2
-        >   screen-y =y1
-                color =goalcolor
+        screen-x =x2
+    >   screen-y =y1
+        color =goalcolor
+
     ?manual>
         state free
 ==>
@@ -694,7 +700,7 @@
 )
 
 
-(p goal-check-up
+(p target-check-up
     =goal>
         state move-to-goal
         intention move
@@ -719,7 +725,7 @@
 )
 
 
-(p goal-check-left
+(p target-check-left
     =goal>
         state move-to-goal
         intention move
@@ -744,7 +750,7 @@
 )
 
 
-(p goal-check-right
+(p target-check-right
     =goal>
         state move-to-goal
         intention move
