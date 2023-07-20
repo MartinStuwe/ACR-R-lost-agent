@@ -29,7 +29,8 @@
     (down-control isa control intention move-down button s)
     (left-control isa control intention move-left button a)
     (right-control isa control intention move-right button d)
-    (first-goal isa goal state i-dont-know-the-goal)
+
+    (first-goal isa goal state i-dont-know-the-board)
 
     (goal-tile isa tile-type color green type goal)
     (reward-tile isa tile-type color type type reward)
@@ -41,6 +42,32 @@
 )
 
 (goal-focus first-goal)
+
+(p identify-border
+    =goal>
+        state i-dont-know-the-board
+    =visual-location>
+    -   kind line
+==>
+    +visual-location>
+        kind line
+        screen-x lowest)
+
+(p save-border1
+    =goal>
+        state i-dont-know-the-board
+    =visual-location>
+        kind line
+        screen-x =x
+        screen-y =y
+==>
+    =goal>
+        state i-dont-know-the-goal
+        border-x-lowest-x =x
+        border-x-lowest-y =y
+)
+        
+
 
 (p retrieve-goal-color
     =goal>
