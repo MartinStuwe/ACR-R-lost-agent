@@ -39,7 +39,8 @@
 
     (fog-of-war isa )
 
-    (first-goal isa goal state i-dont-know-the-board intention left-border)
+    (first-goal isa goal state i-dont-know-the-board intention left-border
+                         goalcolor unknown bodycolor unknown rewardcolor unknown penaltycolor unknown blockcolor unknown)
 
 )
 
@@ -180,6 +181,7 @@
         color =color
     ?visual>
         state free
+        processor free
     ?imaginal>
         state free
 ==>
@@ -201,6 +203,9 @@
     =visual-location>
         screen-y =y
     =imaginal>
+    ?visual>
+        state free
+        processor free
 ==>
     +visual-location>
         :attended nil  
@@ -222,6 +227,7 @@
        - state error
     ?visual>
         state free
+        processor free
 ==>
     =goal>
         state check-for-others
@@ -369,6 +375,7 @@
         bodycolor =body
     ?visual>
         state free
+    processor free
 ==>
     +visual-location>
         :attended nil
@@ -389,6 +396,7 @@
         kind oval
     ?visual>
         state free
+        processor free
 ==>
     +visual>
         cmd move-attention
@@ -418,9 +426,9 @@
     =goal>
         state i-am-this
         intention locate
-    =imaginal>
-        type body
-        color =color
+    ;=imaginal>
+    ;    type body
+    ;    color =color
     =visual-location>
         color =body
     ==>
@@ -440,6 +448,7 @@
         state free
     ?visual>
         state free
+        processor free
     ?retrieval>
         state free
     ==>
@@ -460,6 +469,7 @@
         goalcolor =col
     ?visual>
         buffer full
+        processor free
     ?manual>
         state free
     ==>
@@ -481,6 +491,7 @@
     ?visual>
         ;state busy
         buffer full
+        processor free
 ==>
     =goal>
         state search-goal
@@ -495,12 +506,18 @@
         intention find-tiles
         bodycolor =bodycol
         goalcolor =goalcol
+        rewardcolor =rewardcol
+        penaltycolor =penaltycol
+        blockcolor =blockcol
     
 ==>
     +visual-location>
         kind oval
     -   color =bodycol
     -   color =goalcol
+    -   color =rewardcol
+    -   color =penaltycol
+    -   color =blockcol
     =goal>
         intention interact
 )
@@ -547,27 +564,6 @@
         kind oval
         color =bodycolor
 )
-
-;(p block-tile-check
-;    =goal>
-;        state
-;        intention
-;    I DIDN'T MOVE
-;    =visual-location>
-;    same as before    
-;)
-
-;(p reward-tile-check
-;    +visual-location>
-;        kind text
-;        color red
-;    color red kind text value '+'
-;)
-
-;(p penalty-tile-check
-;    color red kind text value '-'
-;)
-
 
 (p leftcheck
     =goal>
@@ -825,14 +821,15 @@
         downbound =y
     ?retrieval>
         state free
+    ?visual-location>
+    -   buffer failure
+    -   state error
     ==>
     =goal>
         state move-to-goal
         intention move
     =imaginal>
 )
-
-
 
 
 (p target-tile-check-down
@@ -843,9 +840,16 @@
     =visual-location>
         screen-x =x
         screen-y =y
+
     =imaginal>
     >    upbound =y
     >    downbound =y
+        leftbound =targetx
+        upbound =targety
+
+    !eval! (not(= =y (- =targety 25)))
+
+
 
     ?manual>
         state free
@@ -856,6 +860,33 @@
     =goal>
         intention find-direction
     =imaginal>
+)
+
+(p target-tile-check-down-next-to
+    =goal>
+        state move-to-goal
+        intention move
+        bodycolor =bodycol
+
+    =visual-location>
+        screen-x =x
+        screen-y =y
+    =imaginal>
+        upbound =targety
+        leftbound =targetx
+        leftbound =x
+    !eval! (= =y (- =targety 25))
+
+    ?manual>
+        state free
+==>
+    +manual>
+        cmd press-key
+        key s
+    =goal>
+        intention check-after-move
+    =imaginal>
+
 )
 
 (p target-tile-check-up
@@ -869,6 +900,11 @@
     =imaginal>
     <    upbound =y
     <    downbound =y
+    downbound =targety
+    leftbound =targetx
+
+    !eval! (not (= =y (+ =targety 25)))
+
     ?manual>
         state free
 ==>
@@ -880,7 +916,53 @@
     =imaginal>
 )
 
+(p target-tile-check-up-next-to
+    =goal>
+        state move-to-goal
+        intention move
+        bodycolor =bodycol
 
+    =visual-location>
+        screen-x =x
+        screen-y =y
+    =imaginal>
+        upbound =targety
+        leftbound =targetx
+        leftbound =x
+    
+    !eval! (= =y (+ =targety 25))
+    ?manual>
+        state free
+==>
+    +manual>
+        cmd press-key
+        key w
+    =goal>
+        intention check-after-move
+    =imaginal>
+
+)
+(P move-onto-check-after-move
+    =goal>
+        intention check-after-move
+        bodycolor =bodycol
+    ?manual>
+        state free
+    =imaginal>
+        upbound =targety
+        leftbound =targetx
+==>
+
+    +visual-location>
+        screen-x =targetx
+        screen-y =targety
+        color =bodycol
+    =imaginal>
+    =goal>
+        intention find-direction
+
+
+)
 (p target-tile-check-left
     =goal>
         state move-to-goal
@@ -892,6 +974,13 @@
     =imaginal>
     <   leftbound =x
     <   rightbound =x
+    rightbound =targetx
+    upbound =targety
+    
+    !eval! (not (= =x (- =targetx 25)))
+
+
+
     ?manual>
         state free
 ==>
@@ -902,6 +991,37 @@
         intention find-direction
     =imaginal>
 )
+
+(p target-tile-check-left-next-to
+    =goal>
+        state move-to-goal
+        intention move
+        bodycolor =bodycol
+
+    =visual-location>
+        screen-x =x
+        screen-y =y
+    =imaginal>
+        upbound =targety
+        leftbound =targetx
+        upbound =y
+
+    !eval! (= =x (- =targetx 25))
+
+
+    ?manual>
+        state free
+==>
+    +manual>
+        cmd press-key
+        key a
+    =goal>
+        intention check-after-move
+    =imaginal>
+
+
+)
+
 
 
 (p target-tile-check-right
@@ -915,8 +1035,13 @@
     =imaginal>
     >   leftbound =x
     >  rightbound =x
+    rightbound =targetx
+    upbound =targety
 
-    
+
+    !eval! (not (= =x (+ =targetx 25)))
+
+
     ?manual>
             state free
 ==>
@@ -928,51 +1053,188 @@
     =imaginal>
 )
 
-
-(p target-tile-check-left
+(p target-tile-check-right-next-to
     =goal>
         state move-to-goal
         intention move
+        bodycolor =bodycol
+
     =visual-location>
         screen-x =x
         screen-y =y
-
     =imaginal>
-    <   leftbound =x
-    <   rightbound =x
+        upbound =targety
+        leftbound =targetx
+        upbound =y
+    !eval! (= =x (+ =targetx 25))
+    
     ?manual>
         state free
 ==>
     +manual>
         cmd press-key
-        key a
+        key d
     =goal>
-        intention find-direction
+        intention check-after-move
     =imaginal>
+
 )
+
 
 
 (p target-tile-check-reached
     =goal>
         state move-to-goal
         intention move
+        bodycolor =bodycol
     =visual-location>
         screen-x =x
         screen-y =y
 
     =imaginal>
-    =   leftbound =x
-    =  rightbound =x
-    =    upbound =y
-    =    downbound =y
+       leftbound =x
+      rightbound =x
+        upbound =y
+        downbound =y
     
     ?manual>
             state free
+    ?visual>
+        state busy
+    ?retrieval>
+        state free
 ==>
     =goal>
-        intention halt
+        intention scan-bonus
     =imaginal>
+    
+    +visual-location>
+        screen-x 355 
+        screen-y 308
+    +retrieval>
+        screen-x =x
+        screen-y =y
+    -   color =bodycol
+
+    +visual>
+        cmd clear
+
 )
+
+
+(p penalty-reward-tile-check1
+    =goal>
+        state move-to-goal
+        intention scan-bonus
+        penaltycolor =penaltycol
+        rewardcolor =rewardcol
+        !eval! (or(string-equal =rewardcol "unknown") (string-equal =penaltycol "unknown"))
+
+    =visual-location>
+        kind text
+        color black
+    ?visual>
+        buffer empty
+        state free
+        processor free
+    =retrieval>
+==>
+    =goal>
+        intention attend-score
+    +visual>
+        cmd move-attention
+        screen-pos =visual-location
+    =retrieval>
+
+)
+
+(p penalty-tile-check2
+    =goal>
+        state move-to-goal
+        intention attend-score
+        penaltycolor unknown
+        bodycolor =bodycol
+    ?visual>
+        state free
+        processor free
+    =visual>
+        value "0"
+    =retrieval>
+        color =penaltycol
+==>
+    =goal>
+        penaltycolor =penaltycol
+        state i-am-this
+        intention attend
+
+    +visual-location>
+        bodycolor =bodycol
+)
+(p reward-tile-check2
+    =goal>
+        state move-to-goal
+        intention attend-score
+        penaltycolor unknown
+        bodycolor =bodycol
+    =visual>
+    -   value "0"
+    =retrieval>
+        color =rewardcol
+    ?visual>
+        state free
+        processor free
+==>
+    =goal>
+        rewardcolor =rewardcol
+
+        state i-am-this
+        intention attend
+    +visual-location>
+        bodycolor =bodycol
+)
+
+
+(p block-tile-check
+    =goal>
+        state move-to-goal
+        intention find-direction
+        blockcolor unknown
+    ?visual-location>
+        ;buffer failure
+        state error
+    =imaginal>
+        leftbound =x
+        upbound =y
+==>
+    +visual-location>
+        screen-x =x
+        screen-y =y
+    =imaginal>
+    =goal>
+        intention identify-block
+)
+(p block-tile-color-ident
+    =goal>
+        state move-to-goal
+        intention identify-block
+    =imaginal>
+        leftbound =x
+        upbound =y
+    =visual-location>
+       screen-x =x
+       screen-y =y
+       color =blockcol
+
+==>
+    =goal>
+        state find-goal
+        intention search
+        blockcolor =blockcol
+    
+)
+
+
+
 
 
 
