@@ -12,6 +12,8 @@
 (chunk-type tile-type color type)
 (chunk-type tile color type screen-x screen-y)
 
+(chunk-type sight viewrange)
+
 (set-visloc-default screen-y lowest kind oval)
 (set-parameter-value :visual-num-finsts 25)
 
@@ -35,6 +37,8 @@
     (trap-tile isa tile-type color unknown type trap)
     (block-tile isa tile-type color unknown type block)
 
+    (fog-of-war isa )
+
     (first-goal isa goal state i-dont-know-the-board intention left-border)
 
 )
@@ -50,7 +54,8 @@
 ==>
     +visual-location>
         kind line
-        screen-x lowest)
+        screen-x lowest  
+)
 
 (p save-left-border
     =goal>
@@ -65,8 +70,6 @@
         intention right-border
         border-left-x =x
 )
-
-
 
 (p identify-right-border
     =goal>
@@ -118,8 +121,6 @@
         intention lower-border
 )
 
-
-
 (p identify-lower-border
     =goal>
         state i-dont-know-the-board
@@ -129,7 +130,8 @@
 ==>
     +visual-location>
         kind line
-        screen-y highest)
+        screen-y highest
+)
 
 
 (p save-lower-border
@@ -145,9 +147,6 @@
         border-lower-y =y
 )
         
-        
-
-
 (p retrieve-goal-color
     =goal>
         state i-dont-know-the-goal
@@ -157,7 +156,6 @@
 ==>
     +retrieval>
         type goal
-
 )
 
 (p i-retrieved-the-goal-color
@@ -172,39 +170,30 @@
         goalcolor =goalcolor
 )
 
-
-
-;Identify Actuator Tile
 (p locate-first
-
     =goal>
     state i-dont-know-who-i-am
-
     =visual-location>
         isa visual-location
         kind oval
         screen-x =x
         screen-y =y
         color =color
-
     ?visual>
         state free
     ?imaginal>
         state free
-    ==>
-
+==>
     =goal>
         state watch-for-others
     +visual>
         cmd move-attention
         screen-pos =visual-location
-
     +imaginal>
         isa tile
         color =color
         screen-x =x
         screen-y =y
-
 )
 
 (p request-second
@@ -212,9 +201,7 @@
         state watch-for-others
     =visual-location>
         screen-y =y
-
     =imaginal>
-
 ==>
     +visual-location>
         :attended nil  
@@ -223,8 +210,6 @@
     =imaginal>
     =goal>
         state check-for-others
-
-
 )
 
 (p check-for-others-tiles
@@ -249,11 +234,8 @@
         :attended nil  
         screen-y =y
         kind oval
-
     -imaginal>
-
 )
-
 
 (P no-other-bodies
     =goal>
@@ -329,7 +311,6 @@
         intention check
 )
 
-
 (p did-i-move
     =goal>
         state did-i-move
@@ -367,7 +348,7 @@
     ?visual-location>
         buffer failure
         state error
-    ==>
+==>
     =goal>
         state i-am-this
         intention scan
@@ -432,9 +413,7 @@
     +visual-location>
         color =body
         kind oval
-
 )
-
 
 (p track-body-request
     =goal>
@@ -508,6 +487,7 @@
     =goal>
         state search-goal
         intention move
+    -imaginal>
 )
 
 (p what-are-those-tiles
@@ -517,50 +497,78 @@
         bodycolor =bodycol
         goalcolor =goalcol
 ==>
-    +retrieval>
+    +visual-location>
         kind oval
     -   color =bodycol
     -   color =goalcol
 )
 
-(p target
+(p i-want-to-move-to-this-position-range
     =goal>
         state search-goal
-        intention target
-    ==>
-    +imaginal>
-        screen-x
-        screen-y)
+        intention interact
 
-;(p i-want-to-move-to-this-tile
-;    =goal>
-;        state search-goal
-;        intention interact
-;        bodycolor =bodycol
-;        goalcolor =goalcol
-;    =retrieval>
-;        kind oval
-;        color =bodycol
-;        screen-x =x
-;        screen-y =y
-;==>
-;    +retrieval>
-;        kind oval
-;    -   color =col
-;    -   color =goalcol
-;)
+        bodycolor =bodycol
+        goalcolor =goalcol
+    =imaginal>
+        leftbound =leftbound
+        rightbound =rightbound 
+        upbound =upbound 
+        downbound =downbound
+    
+==>
+    +visual-location>
+        kind oval
+        color =bodycolor
+)
 
 
 
-(p moveleft
+(p leftcheck
     =goal>
         state search-goal
         intention move
-    ?manual>
+        border-left-x =leftborderx
+    =visual-location>
+        screen-x =x
+    >   screen-x =leftborderx
+
+        screen-y =y
+
+    !eval! (> =x (+ =leftborderx 12))
+
+    ?imaginal>
+        buffer empty
         state free
-    ?retrieval>
-        state free
-    ==>
+==>
+    
+    !bind! =leftmove (- =x 25)
+
+    +imaginal>
+        leftbound =leftmove
+        rightbound =leftmove
+        upbound =y 
+        downbound =y
+)
+
+
+(p i-want-to-move-to-this-position-range-checkleft
+    =goal>
+        state search-goal
+        intention move
+        bodycolor =bodycol
+        goalcolor =goalcol
+    =imaginal>
+        leftbound =leftbound
+        rightbound =rightbound 
+        upbound =upbound 
+        downbound =downbound
+    =visual-location>
+        kind oval
+        color =bodycolor
+    >   screen-x =leftbound
+    
+==>
     +manual>
         cmd press-key
         key a
@@ -569,33 +577,50 @@
         intention search
 )
 
-
-(p movedown
+(p rightcheck
     =goal>
         state search-goal
         intention move
-    ?manual>
+        border-right-x =rightborderx
+    =visual-location>
+        screen-x =x
+    <   screen-x =rightborderx
+        screen-y =y
+    
+    !eval! (< =x (- =rightborderx 13))
+
+    ?imaginal>
+        buffer empty
         state free
-    ?retrieval>
-        state free
-    ==>
-    +manual>
-        cmd press-key
-        key s
-    =goal>
-        state find-goal
-        intention search
+==>
+
+    !bind! =rightmove (+ =x 25)
+
+    +imaginal>
+        leftbound =rightmove
+        rightbound =rightmove
+        upbound =y 
+        downbound =y
+    =visual-location>
 )
 
-(p moveright
+(p i-want-to-move-to-this-position-range-checkright
     =goal>
         state search-goal
         intention move
-    ?manual>
-        state free
-    ?retrieval>
-        state free
-    ==>
+        bodycolor =bodycol
+        goalcolor =goalcol
+    =imaginal>
+        leftbound =leftbound
+        rightbound =rightbound 
+        upbound =upbound 
+        downbound =downbound
+    =visual-location>
+        kind oval
+        color =bodycolor
+    <   screen-x =rightbound
+    
+==>
     +manual>
         cmd press-key
         key d
@@ -604,32 +629,117 @@
         intention search
 )
 
-;(p scanright
-;    =goal>
-;        state find-goal
-;        intention scanright
-;==>
-;    +retrieval>
-;        kind oval
-;    >   bodyx)
 
-(p moveup
+(p downcheck
     =goal>
         state search-goal
         intention move
-    ?manual>
+        border-lower-y =downbordery
+    =visual-location>
+        screen-x =x
+
+    <   screen-y =downbordery
+        screen-y =y
+
+    !eval! (< =y (- =downbordery 12))
+
+    ?imaginal>
+        buffer empty
         state free
-    ?retrieval>
+
+==>
+
+    !bind! =downmove (- =y 25)
+    +imaginal>
+        leftbound =x
+        rightbound =x
+    
+        upbound =downmove
+        downbound =downmove
+)
+
+
+(p i-want-to-move-to-this-position-range-checkdown
+    =goal>
+        state search-goal
+        intention move
+        bodycolor =bodycol
+        goalcolor =goalcol
+    =imaginal>
+        leftbound =leftbound
+        rightbound =rightbound 
+        upbound =upbound 
+        downbound =downbound
+    =visual-location>
+        kind oval
+        color =bodycolor
+    >   screen-y =downbound
+    
+==>
+    +manual>
+        cmd press-key
+        key s
+    =goal>
+        state find-goal
+        intention search
+
+)
+
+
+(p upcheck
+    =goal>
+        state search-goal
+        intention move
+        border-upper-y =upbordery
+    =visual-location>
+        screen-x =x
+
+    >   screen-y =upbordery
+        screen-y =y
+
+    !eval! (> =y (+ =upbordery 12))
+
+
+    ?imaginal>
+        buffer empty
         state free
-    ==>
+==>
+    =visual-location>
+
+    !bind! =upmove (+ =y 25)
+    +imaginal>
+        leftbound =x
+        rightbound =x
+        upbound =upmove
+        downbound =upmove
+)
+
+(p i-want-to-move-to-this-position-range-checkup
+    =goal>
+        state search-goal
+        intention move
+        bodycolor =bodycol
+        goalcolor =goalcol
+    =imaginal>
+        leftbound =leftbound
+        rightbound =rightbound 
+        upbound =upbound 
+        downbound =downbound
+    =visual-location>
+        kind oval
+        color =bodycolor
+    <   screen-y =upbound
+    
+==>
     +manual>
         cmd press-key
         key w
-
     =goal>
         state find-goal
         intention search
 )
+
+
 
 
 (p found-goal
@@ -652,10 +762,6 @@
     =goal>
         state move-to-goal
         intention find-direction
-        goalcolor =col
-    =visual>
-        oval t
-        screen-pos =visloc-chunk
     =visual-location>
         kind oval
         color =col
@@ -673,7 +779,7 @@
 )
 
 
-(p target-check-down
+(p target-tile-check-down
     =goal>
         state move-to-goal
         intention move
@@ -684,7 +790,7 @@
     =retrieval>
         screen-x =x2
     >   screen-y =y1
-        color =goalcolor
+        color =targetcolor
 
     ?manual>
         state free
@@ -696,11 +802,10 @@
         intention find-direction
     +visual-location>
         kind oval
-        color =goalcolor
+        color =targetcolor
 )
 
-
-(p target-check-up
+(p target-tile-check-up
     =goal>
         state move-to-goal
         intention move
@@ -710,7 +815,7 @@
     =retrieval>
             screen-x =x2
         <   screen-y =y1
-            color =goalcolor
+            color =targetcolor
     ?manual>
         state free
 ==>
@@ -721,11 +826,11 @@
         intention find-direction
     +visual-location>
         kind oval
-        color =goalcolor
+        color =targetcolor
 )
 
 
-(p target-check-left
+(p target-tile-check-left
     =goal>
         state move-to-goal
         intention move
@@ -735,7 +840,7 @@
     =retrieval>
     <    screen-x =x1
         screen-y =y2
-        color    =goalcolor
+        color    =targetcolor
     ?manual>
         state free
 ==>
@@ -746,11 +851,11 @@
         intention find-direction
     +visual-location>
         kind oval
-        color =goalcolor
+        color =targetcolor
 )
 
 
-(p target-check-right
+(p target-tile-check-right
     =goal>
         state move-to-goal
         intention move
@@ -760,7 +865,7 @@
     =retrieval>
     >   screen-x =x1
         screen-y =y2
-        color    =goalcolor
+        color    =targetcolor
     ?manual>
             state free
 ==>
@@ -771,10 +876,8 @@
         intention find-direction
     +visual-location>
         kind oval
-        color =goalcolor
+        color =targetcolor
 )
-
-
 
 
 
