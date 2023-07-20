@@ -29,7 +29,7 @@
     (down-control isa control intention move-down button s)
     (left-control isa control intention move-left button a)
     (right-control isa control intention move-right button d)
-    (first-goal isa goal state i-dont-know-who-i-am)
+    (first-goal isa goal state i-dont-know-the-goal)
 
     (goal-tile isa tile-type color green type goal)
     (reward-tile isa tile-type color type type reward)
@@ -41,6 +41,30 @@
 )
 
 (goal-focus first-goal)
+
+(p retrieve-goal-color
+    =goal>
+        state i-dont-know-the-goal
+    ?retrieval>
+        buffer empty
+        state free
+==>
+    +retrieval>
+        type goal
+
+)
+
+(p i-retrieved-the-goal-color
+    =goal>
+        state i-dont-know-the-goal
+    =retrieval>
+        type goal
+        color =goalcolor
+==>
+    =goal>
+        state i-dont-know-who-i-am
+        goalcolor =goalcolor
+)
 
 
 
@@ -247,9 +271,7 @@
     +visual-location>
         color =color
         kind oval
-
-    )
-
+)
 
 (p initial-scan-request
     =goal>
@@ -364,6 +386,7 @@
     =retrieval>
     =goal>
         intention check
+;        goalcolor =col
 )
 
 
@@ -390,6 +413,38 @@
     ;+visual>
     ;    cmd clear
 )
+
+;(p what-are-those-tiles
+;    =goal>
+;        state search-goal
+;        intention interact
+;        color =col
+;        goalcolor =goalcol
+;==>
+;    +retrieval>
+;        kind oval
+;    -   color =col
+;    -   color =goalcol
+;)
+
+;(p i-want-to-move-to-this-tile
+;    =goal>
+;        state search-goal
+;        intention interact
+;        color =col
+;        goalcolor =goalcol
+;    =retrieval>
+;        kind oval
+;        color =col
+;        screen-x =x
+;        screen-y =y
+;==>
+;    +retrieval>
+;        kind oval
+;    -   color =col
+;    -   color =goalcol
+;)
+
 
 
 (p moveleft
@@ -449,6 +504,15 @@
         state find-goal
         intention search
 )
+
+;(p scanright
+;    =goal>
+;        state find-goal
+;        intention scanright
+;==>
+;    +retrieval>
+;        kind oval
+;    >   bodyx)
 
 (p moveup
     =goal>
