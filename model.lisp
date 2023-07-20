@@ -29,18 +29,148 @@
     (down-control isa control intention move-down button s)
     (left-control isa control intention move-left button a)
     (right-control isa control intention move-right button d)
-    (first-goal isa goal state i-dont-know-who-i-am)
 
     (goal-tile isa tile-type color green type goal)
     (reward-tile isa tile-type color type type reward)
     (trap-tile isa tile-type color unknown type trap)
     (block-tile isa tile-type color unknown type block)
 
-    
+    (first-goal isa goal state i-dont-know-the-board intention left-border)
 
 )
 
 (goal-focus first-goal)
+
+(p identify-left-border
+    =goal>
+        state i-dont-know-the-board
+        intention left-border
+    =visual-location>
+    -   kind line
+==>
+    +visual-location>
+        kind line
+        screen-x lowest)
+
+(p save-left-border
+    =goal>
+        state i-dont-know-the-board
+        intention left-border
+    =visual-location>
+        kind line
+        screen-x =x
+==>
+    =goal>
+        state i-dont-know-the-board
+        intention right-border
+        border-left-x =x
+)
+
+
+
+(p identify-right-border
+    =goal>
+        state i-dont-know-the-board
+        intention right-border
+    =visual-location>
+    -   kind line
+==>
+    +visual-location>
+        kind line
+        screen-x highest)
+
+(p save-right-border
+    =goal>
+        state i-dont-know-the-board
+        intention right-border
+    =visual-location>
+        kind line
+        screen-x =x
+==>
+    =goal>
+        state i-dont-know-the-board
+        border-right-x =x
+        intention upper-border
+)
+
+(p identify-upper-border
+    =goal>
+        state i-dont-know-the-board
+        intention upper-border
+    =visual-location>
+    -   kind line
+==>
+    +visual-location>
+        kind line
+        screen-y lowest)
+
+(p save-upper-border
+    =goal>
+        state i-dont-know-the-board
+        intention upper-border
+    =visual-location>
+        kind line
+        screen-y =y
+==>
+    =goal>
+        state i-dont-know-the-board
+        border-upper-y =y
+        intention lower-border
+)
+
+
+
+(p identify-lower-border
+    =goal>
+        state i-dont-know-the-board
+        intention lower-border
+    =visual-location>
+    -   kind line
+==>
+    +visual-location>
+        kind line
+        screen-y highest)
+
+
+(p save-lower-border
+    =goal>
+        state i-dont-know-the-board
+        intention lower-border
+    =visual-location>
+        kind line
+        screen-y =y
+==>
+    =goal>
+        state i-dont-know-the-goal
+        border-lower-y =y
+)
+        
+        
+
+
+(p retrieve-goal-color
+    =goal>
+        state i-dont-know-the-goal
+    ?retrieval>
+        buffer empty
+        state free
+==>
+    +retrieval>
+        type goal
+
+)
+
+(p i-retrieved-the-goal-color
+    =goal>
+        state i-dont-know-the-goal
+    =retrieval>
+        type goal
+        color =goalcolor
+==>
+    =goal>
+        state i-dont-know-who-i-am
+        goalcolor =goalcolor
+)
 
 
 
@@ -65,7 +195,6 @@
 
     =goal>
         state watch-for-others
-
     +visual>
         cmd move-attention
         screen-pos =visual-location
@@ -139,7 +268,7 @@
 ==>
     =goal>
         state i-am-this
-        color =color
+        bodycolor =color
         intention scan
     +imaginal>
         isa tile
@@ -238,7 +367,7 @@
     =goal>
         state i-am-this
         intention scan
-        color =color    
+        bodycolor =color    
     +imaginal>
         isa tile-type
         color =color
@@ -247,15 +376,13 @@
     +visual-location>
         color =color
         kind oval
-
-    )
-
+)
 
 (p initial-scan-request
     =goal>
         state  i-am-this
         intention scan
-        color =body
+        bodycolor =body
     ?visual>
         state free
 ==>
@@ -272,7 +399,7 @@
     =goal>
         state  i-am-this
         intention attend
-        color =body
+        bodycolor =body
     =visual-location>
     -   color =body
         kind oval
@@ -290,7 +417,7 @@
     =goal>
         state i-am-this
         intention attend
-        color =body
+        bodycolor =body
     ?visual-location>
         state error
     ;    buffer failure
@@ -342,26 +469,21 @@
     =goal>
         state find-goal
         intention search
-    +retrieval>
-        isa tile-type
-        type goal
 )
 
 (p search-goal
     =goal>
         state find-goal
         intention search
-    =retrieval>
-        isa tile-type
-        type goal
-        color =col
+        goalcolor =col
     ?visual>
         buffer full
+    ?manual>
+        state free
     ==>
     +visual-location>
         kind oval
         color =col
-    =retrieval>
     =goal>
         intention check
 )
@@ -371,11 +493,7 @@
     =goal>
         state find-goal
         intention check
-        color =body
-    =retrieval>
-        isa tile-type
-        type goal
-        color =col
+        bodycolor =body
     ?visual-location>
         ;buffer failure
         state error
@@ -386,10 +504,48 @@
     =goal>
         state search-goal
         intention move
-    ;-visual-location>
-    ;+visual>
-    ;    cmd clear
 )
+
+(p what-are-those-tiles
+    =goal>
+        state search-goal
+        intention interact
+        bodycolor =bodycol
+        goalcolor =goalcol
+==>
+    +retrieval>
+        kind oval
+    -   color =bodycol
+    -   color =goalcol
+)
+
+(p target
+    =goal>
+        state search-goal
+        intention target
+    ==>
+    +imaginal>
+        screen-x
+        screen-y)
+
+;(p i-want-to-move-to-this-tile
+;    =goal>
+;        state search-goal
+;        intention interact
+;        bodycolor =bodycol
+;        goalcolor =goalcol
+;    =retrieval>
+;        kind oval
+;        color =bodycol
+;        screen-x =x
+;        screen-y =y
+;==>
+;    +retrieval>
+;        kind oval
+;    -   color =col
+;    -   color =goalcol
+;)
+
 
 
 (p moveleft
@@ -404,8 +560,6 @@
     +manual>
         cmd press-key
         key a
-    +retrieval>
-        type goal
     =goal>
         state find-goal
         intention search
@@ -424,8 +578,6 @@
     +manual>
         cmd press-key
         key s
-    +retrieval>
-            type goal
     =goal>
         state find-goal
         intention search
@@ -443,12 +595,19 @@
     +manual>
         cmd press-key
         key d
-    +retrieval>
-        type goal
     =goal>
         state find-goal
         intention search
 )
+
+;(p scanright
+;    =goal>
+;        state find-goal
+;        intention scanright
+;==>
+;    +retrieval>
+;        kind oval
+;    >   bodyx)
 
 (p moveup
     =goal>
@@ -462,8 +621,7 @@
     +manual>
         cmd press-key
         key w
-    +retrieval>
-        type goal
+
     =goal>
         state find-goal
         intention search
@@ -474,10 +632,7 @@
     =goal>
         state find-goal
         intention check
-    =retrieval>
-        isa tile-type
-        type goal
-        color =col
+        goalcolor =col
     =visual-location>
         kind oval
         color =col
@@ -493,12 +648,13 @@
     =goal>
         state move-to-goal
         intention find-direction
+        goalcolor =col
     =visual>
         oval t
         screen-pos =visloc-chunk
     =visual-location>
         kind oval
-        color green
+        color =col
         screen-x =x
         screen-y =y 
     ?retrieval>
@@ -506,7 +662,7 @@
     ==>
     +retrieval>
         kind oval
-        color green
+        color =col
     =goal>
         state move-to-goal
         intention move
