@@ -837,8 +837,6 @@
         screen-x =x
         screen-y =y
     =imaginal>
-        ;leftbound =x
-        ;rightbound =x
     >    upbound =y
     >    downbound =y
 
@@ -862,8 +860,6 @@
         screen-y =y
     
     =imaginal>
-        ;leftbound =x
-        ;rightbound =x
     <    upbound =y
     <    downbound =y
     ?manual>
@@ -889,8 +885,6 @@
     =imaginal>
     <   leftbound =x
     <   rightbound =x
-        ;upbound =y
-        ;downbound =y
     ?manual>
         state free
 ==>
@@ -914,8 +908,7 @@
     =imaginal>
     >   leftbound =x
     >  rightbound =x
-        ;upbound =y
-        ;downbound =y
+
     
     ?manual>
             state free
