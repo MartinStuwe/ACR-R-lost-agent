@@ -268,7 +268,7 @@
 ==>
     =goal>
         state i-am-this
-        color =color
+        bodycolor =color
         intention scan
     +imaginal>
         isa tile
@@ -367,7 +367,7 @@
     =goal>
         state i-am-this
         intention scan
-        color =color    
+        bodycolor =color    
     +imaginal>
         isa tile-type
         color =color
@@ -382,7 +382,7 @@
     =goal>
         state  i-am-this
         intention scan
-        color =body
+        bodycolor =body
     ?visual>
         state free
 ==>
@@ -399,7 +399,7 @@
     =goal>
         state  i-am-this
         intention attend
-        color =body
+        bodycolor =body
     =visual-location>
     -   color =body
         kind oval
@@ -417,7 +417,7 @@
     =goal>
         state i-am-this
         intention attend
-        color =body
+        bodycolor =body
     ?visual-location>
         state error
     ;    buffer failure
@@ -478,6 +478,8 @@
         goalcolor =col
     ?visual>
         buffer full
+    ?manual>
+        state free
     ==>
     +visual-location>
         kind oval
@@ -491,7 +493,7 @@
     =goal>
         state find-goal
         intention check
-        color =body
+        bodycolor =body
     ?visual-location>
         ;buffer failure
         state error
@@ -504,28 +506,37 @@
         intention move
 )
 
-;(p what-are-those-tiles
-;    =goal>
-;        state search-goal
-;        intention interact
-;        color =col
-;        goalcolor =goalcol
-;==>
-;    +retrieval>
-;        kind oval
-;    -   color =col
-;    -   color =goalcol
-;)
+(p what-are-those-tiles
+    =goal>
+        state search-goal
+        intention interact
+        bodycolor =bodycol
+        goalcolor =goalcol
+==>
+    +retrieval>
+        kind oval
+    -   color =bodycol
+    -   color =goalcol
+)
+
+(p target
+    =goal>
+        state search-goal
+        intention target
+    ==>
+    +imaginal>
+        screen-x
+        screen-y)
 
 ;(p i-want-to-move-to-this-tile
 ;    =goal>
 ;        state search-goal
 ;        intention interact
-;        color =col
+;        bodycolor =bodycol
 ;        goalcolor =goalcol
 ;    =retrieval>
 ;        kind oval
-;        color =col
+;        color =bodycol
 ;        screen-x =x
 ;        screen-y =y
 ;==>
