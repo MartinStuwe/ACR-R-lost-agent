@@ -81,21 +81,18 @@
 (p request-second
     =goal>
         state watch-for-others
-
-      =visual-location>
+    =visual-location>
         screen-y =y
 
-        =imaginal>
+    =imaginal>
 
 ==>
-        +visual-location>
+    +visual-location>
         :attended nil  
         kind oval
         screen-y =y
-
-        =imaginal>
-
-        =goal>
+    =imaginal>
+    =goal>
         state check-for-others
 
 
@@ -110,6 +107,8 @@
         screen-y =y
     ?visual-location>
        - state error
+    ?visual>
+        state free
 ==>
     =goal>
         state check-for-others
@@ -121,35 +120,10 @@
         :attended nil  
         screen-y =y
         kind oval
+
     -imaginal>
 
 )
-
-;(p attend-other-tiles
-;    =goal>
-;        state check-for-others
-;        intention attend
-;    =visual-location>
-;    ==>
-;    +visual>
-;        cmd move-attention
-;        screen-pos =visual-location
-;    +retrieval>
-;        oval t
-;    =goal>
-;        state retrieve
-;    )
-
-;(p retrieval-check
-;    =goal>
-;        state retrieve
-;    =retrieval>
-;        oval t
-;    ==>
-;    =goal>
-;        state check-for-others
-;        intention retrieve
-;)
 
 
 (P no-other-bodies
@@ -160,13 +134,13 @@
         state error
     =imaginal>
         color =color
-    
+    ?imaginal>
+        state free
 ==>
     =goal>
         state i-am-this
         color =color
-        intention locate
-
+        intention scan
     +imaginal>
         isa tile
         color =color
@@ -184,9 +158,6 @@
 ==>
     =goal>
         state who-am-i
-    ;+retrieval>
-    ;    :recently-retrieved nil
-    ;    kind oval
 )
 
 (p do-i-move
@@ -216,12 +187,10 @@
     =goal>
         state did-i-move
         intention request
-    ;?retrieval>
-    ;   state free
     ?visual-location>
     -  buffer failure
-    ;-   state error
-
+    ?retrieval>
+        state free
 ==>
     +retrieval>
         kind oval
@@ -244,7 +213,6 @@
     
 ==>
     =retrieval>
-
     +visual-location>
         color =color2
         screen-x =x
@@ -264,12 +232,12 @@
         screen-y =y
         kind oval
     ?visual-location>
-        ;buffer failure
+        buffer failure
         state error
     ==>
     =goal>
         state i-am-this
-        intention locate
+        intention scan
         color =color    
     +imaginal>
         isa tile-type
@@ -282,6 +250,61 @@
 
     )
 
+
+(p initial-scan-request
+    =goal>
+        state  i-am-this
+        intention scan
+        color =body
+    ?visual>
+        state free
+==>
+    +visual-location>
+        :attended nil
+        ;:attended new
+        - color =body
+        kind oval
+    =goal>
+        intention attend
+)
+
+(p initial-scan-attend
+    =goal>
+        state  i-am-this
+        intention attend
+        color =body
+    =visual-location>
+    -   color =body
+        kind oval
+    ?visual>
+        state free
+==>
+    +visual>
+        cmd move-attention
+        screen-pos =visual-location
+    =goal>
+        intention scan
+)
+
+(p initial-scan-stop
+    =goal>
+        state i-am-this
+        intention attend
+        color =body
+    ?visual-location>
+        state error
+    ;    buffer failure
+==>
+    =goal>
+        state i-am-this
+        intention locate
+    +visual-location>
+        color =body
+        kind oval
+
+)
+
+
 (p track-body-request
     =goal>
         state i-am-this
@@ -290,6 +313,7 @@
         type body
         color =color
     =visual-location>
+        color =body
     ==>
     +visual>
         cmd move-attention
@@ -304,6 +328,10 @@
         intention track
     =visual>
     ?manual>
+        state free
+    ?visual>
+        state free
+    ?retrieval>
         state free
     ==>
     +visual>
@@ -327,6 +355,8 @@
         isa tile-type
         type goal
         color =col
+    ?visual>
+        buffer full
     ==>
     +visual-location>
         kind oval
@@ -350,94 +380,25 @@
         ;buffer failure
         state error
     ?visual>
-        state busy
+        ;state busy
+        buffer full
 ==>
     =goal>
         state search-goal
-        intention scan
-
-
-    ;+visual-location>
-    ;    :attended nil
-    ;    - color =body
-    ;    kind oval
-
-    -visual-location>
-    +visual>
-        cmd clear
-)
-
-(p initial-scan-request
-    =goal>
-        state  search-goal
-        intention scan
-        color =body
-    ?visual>
-        state free
-==>
-    +visual-location>
-        :attended nil
-        - color =body
-        kind oval
-    =goal>
-        intention attend
-
-
-)
-
-(p initial-scan-attend
-    =goal>
-        state  search-goal
-        intention attend
-        color =body
-    =visual-location>
-    -   color =body
-        kind oval
-    ?visual>
-        state free
-==>
-    +visual>
-        cmd move-attention
-        screen-pos =visual-location
-    =goal>
-        intention scan
-)
-
-(p initial-scan-stop
-    =goal>
-        state search-goal
-        intention attend
-        color =body
-    ?visual-location>
-        state error
-==>
-    =goal>
-        state search-goal
-        ;intention move
-        intention track-body
-    +visual-location>
-        color =body
-        kind oval
-
-)
-(p initial-scan-track-body
-    =goal>
-        state search-goal
-        intention track-body
-        color =body
-    =visual-location>
-==>
-    +visual>
-        cmd start-tracking
-    =goal>
         intention move
+    ;-visual-location>
+    ;+visual>
+    ;    cmd clear
 )
+
 
 (p moveleft
     =goal>
         state search-goal
         intention move
     ?manual>
+        state free
+    ?retrieval>
         state free
     ==>
     +manual>
@@ -448,15 +409,7 @@
     =goal>
         state find-goal
         intention search
-    )
-
-;(p leftupdate
-;    =goal>
-;        state find-goal
-;        intention scanleft
-;    =visual-location>
-;        kind oval
-;        )
+)
 
 
 (p movedown
@@ -465,24 +418,26 @@
         intention move
     ?manual>
         state free
+    ?retrieval>
+        state free
     ==>
     +manual>
         cmd press-key
         key s
-
     +retrieval>
             type goal
     =goal>
         state find-goal
         intention search
-
-    )
+)
 
 (p moveright
     =goal>
         state search-goal
         intention move
     ?manual>
+        state free
+    ?retrieval>
         state free
     ==>
     +manual>
@@ -493,8 +448,6 @@
     =goal>
         state find-goal
         intention search
-
-    
 )
 
 (p moveup
@@ -502,6 +455,8 @@
         state search-goal
         intention move
     ?manual>
+        state free
+    ?retrieval>
         state free
     ==>
     +manual>
@@ -512,8 +467,7 @@
     =goal>
         state find-goal
         intention search
-
-    )
+)
 
 
 (p found-goal
@@ -532,7 +486,7 @@
         state move-to-goal
         intention find-direction
     =visual-location>
-    )
+)
 
 
 (p goal-check1
@@ -547,11 +501,12 @@
         color green
         screen-x =x
         screen-y =y 
+    ?retrieval>
+        state free
     ==>
     +retrieval>
         kind oval
         color green
-        
     =goal>
         state move-to-goal
         intention move
@@ -571,7 +526,6 @@
                 color =goalcolor
     ?manual>
         state free
-
 ==>
     +manual>
         cmd press-key
@@ -581,7 +535,7 @@
     +visual-location>
         kind oval
         color =goalcolor
-    )
+)
 
 
 (p goal-check-up
@@ -597,18 +551,16 @@
             color =goalcolor
     ?manual>
         state free
-
 ==>
     +manual>
         cmd press-key
         key w
     =goal>
         intention find-direction
-       +visual-location>
+    +visual-location>
         kind oval
         color =goalcolor
-
-    )
+)
 
 
 (p goal-check-left
@@ -624,17 +576,16 @@
         color    =goalcolor
     ?manual>
         state free
-    ==>
-        +manual>
-            cmd press-key
-            key a
-        =goal>
-            intention find-direction
+==>
+    +manual>
+        cmd press-key
+        key a
+    =goal>
+        intention find-direction
     +visual-location>
         kind oval
         color =goalcolor
-
-    )
+)
 
 
 (p goal-check-right
@@ -659,8 +610,7 @@
     +visual-location>
         kind oval
         color =goalcolor
-
-    )
+)
 
 
 
