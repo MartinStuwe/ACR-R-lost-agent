@@ -484,25 +484,29 @@
 ==>
     =goal>
         state search-goal
-        intention move
+        ;intention move
+        intention find-tiles
     -imaginal>
 )
 
 (p what-are-those-tiles
     =goal>
         state search-goal
-        intention interact
+        intention find-tiles
         bodycolor =bodycol
         goalcolor =goalcol
+    
 ==>
     +visual-location>
         kind oval
     -   color =bodycol
     -   color =goalcol
+    =goal>
+        intention interact
 )
 
 
-(p move visual-location-into-bounded-imaginal
+(p move-visual-location-into-bounded-imaginal
     =goal>
         state search-goal
         intention interact
@@ -521,6 +525,9 @@
         rightbound =x 
         upbound =y 
         downbound =y
+    =goal>
+        state move-to-goal
+        intention find-direction
 )
 
 (p i-want-to-move-to-this-position-range
@@ -918,6 +925,52 @@
         key d
     =goal>
         intention find-direction
+    =imaginal>
+)
+
+
+(p target-tile-check-left
+    =goal>
+        state move-to-goal
+        intention move
+    =visual-location>
+        screen-x =x
+        screen-y =y
+
+    =imaginal>
+    <   leftbound =x
+    <   rightbound =x
+    ?manual>
+        state free
+==>
+    +manual>
+        cmd press-key
+        key a
+    =goal>
+        intention find-direction
+    =imaginal>
+)
+
+
+(p target-tile-check-reached
+    =goal>
+        state move-to-goal
+        intention move
+    =visual-location>
+        screen-x =x
+        screen-y =y
+
+    =imaginal>
+    =   leftbound =x
+    =  rightbound =x
+    =    upbound =y
+    =    downbound =y
+    
+    ?manual>
+            state free
+==>
+    =goal>
+        intention halt
     =imaginal>
 )
 
