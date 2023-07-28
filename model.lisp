@@ -10,7 +10,7 @@
 (sgp :v t :show-focus t :trace-detail low)
 
 (chunk-type goal state intention BORDER-LEFT-X BORDER-right-X BORDER-UPPER-Y BORDER-Lower-Y 
-goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
+goalcolor bodycolor rewardcolor penaltycolor blockcolor score xsight ysight)
 (chunk-type control intention button)
 (chunk-type tile-type color type)
 (chunk-type tile color type screen-x screen-y)
@@ -43,7 +43,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     (first-goal isa goal state i-dont-know-the-board intention left-border
                          goalcolor unknown bodycolor unknown rewardcolor unknown penaltycolor unknown blockcolor unknown
                          border-left-x unknown border-right-x unknown border-lower-y unknown border-upper-y unknown
-                         score "0")
+                         score "0" xsight 25 ysight 25)
 
 )
 
@@ -516,7 +516,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     +visual-location>
         kind oval
         color =goalcol
-    )
+)
 
 (p is-there-a-reward
     =goal>
@@ -563,6 +563,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
         tilecolor =tilecol
         nextx unknown
         nexty unknown
+
 
     =goal>
         state move-to-goal
@@ -919,7 +920,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 ==>
     =goal>
         state find-goal
-        intention check
+        intention checkreward
         screen-x =x
         screen-y =y
 
@@ -932,7 +933,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 (p found-goal-found-reward
     =goal>
         state find-goal
-        intention check
+        intention checkreward
         goalcolor =goalcol
         bodycolor =bodycol
         rewardcolor =rewardcol
@@ -966,7 +967,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 (p found-goal-no-reward
     =goal>
         state find-goal
-        intention check
+        intention checkreward
         goalcolor =goalcol
         bodycolor =bodycol
         screen-x =x
@@ -1398,7 +1399,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 
 ==>
     =goal>
-        intention scan-bonus
+        intention scan-bonus-request
     =imaginal>
     
     +visual-location>
@@ -1420,10 +1421,10 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 (p penalty-reward-tile-check1
     =goal>
         state move-to-goal
-        intention scan-bonus
+        intention scan-bonus-request
         penaltycolor =penaltycol
         rewardcolor =rewardcol
-        !eval! (or(string-equal =rewardcol "unknown") (string-equal =penaltycol "unknown"))
+        ;!eval! (or(string-equal =rewardcol "unknown") (string-equal =penaltycol "unknown"))
 
     =visual-location>
         kind text
@@ -1435,7 +1436,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     =retrieval>
 ==>
     =goal>
-        intention attend-score
+        intention scan-score-move-read-score-reached
     +visual>
         cmd move-attention
         screen-pos =visual-location
@@ -1445,8 +1446,8 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 (p penalty-tile-check2
     =goal>
         state move-to-goal
-        intention attend-score
-        ;penaltycolor unknown
+        intention scan-score-move-read-score-reached
+        penaltycolor unknown
         bodycolor =bodycol
         score =score
     ?visual>
@@ -1471,11 +1472,12 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
         color =bodycol
         kind oval
 )
+
 (p reward-tile-check2
     =goal>
         state move-to-goal
-        intention attend-score
-        ;rewardcolor unknown
+        intention scan-score-move-read-score-reached
+        rewardcolor unknown
         bodycolor =bodycol
         score =score
 
@@ -1503,6 +1505,36 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 )
 
 
+(p reward-penalty-known-reattend
+    =goal>
+        state move-to-goal
+        intention scan-score-move-read-score-reached
+        rewardcolor =rewardcol
+        penaltycolor =penaltycol 
+        bodycolor =bodycol
+        score =score
+    =visual>
+    =retrieval>
+        kind oval
+        color =movedcol
+    !eval! (or (string-equal =movedcol =rewardcol) (string-equal =movedcol =penaltycol))
+
+
+==>
+    =goal>
+        state move-to-goal
+        intention scan-score-move-read-score-reached
+
+    +visual-location>
+        color =bodycol
+        kind oval
+)
+
+
+
+
+
+
 (p target-reached-move-attention-to-body
 
     =goal>
@@ -1515,6 +1547,8 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
         kind oval
     ?manual>
         state free
+    ?retrieval>
+        buffer empty
 
 
 
@@ -1930,7 +1964,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
         intention scan-bonus-not-target
         penaltycolor =penaltycol
         rewardcolor =rewardcol
-        !eval! (or (string-equal =rewardcol "unknown") (string-equal =penaltycol "unknown"))
+        ;!eval! (or (string-equal =rewardcol "unknown") (string-equal =penaltycol "unknown"))
 
     =visual-location>
         kind text
@@ -1942,18 +1976,17 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     =retrieval>
 ==>
     =goal>
-        intention attend-score-not-target
+        intention scan-score-score-update
     +visual>
         cmd move-attention
         screen-pos =visual-location
     =retrieval>
 )
 
-(p penalty-tile-check2-not-target
+(p update-score
     =goal>
         state move-to-goal
-        intention attend-score-not-target
-        ;penaltycolor unknown
+        intention scan-score-score-update
         bodycolor =bodycol
         score =score
     ?visual>
@@ -1961,13 +1994,39 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
         processor free
     =visual>
         value =newscore
+    =retrieval>
+
+==>
+    =goal>
+        score =newscore
+
+        state move-to-goal
+        intention scan-score-move-read-score-update-colors
+    =retrieval>
+    =visual>
+)
+
+(p penalty-tile-check2-not-target
+    =goal>
+        state move-to-goal
+        intention scan-score-move-read-score-update-colors
+        penaltycolor unknown
+        rewardcolor unknown
+        bodycolor =bodycol
+        score =score
+    ?visual>
+        state free
+        processor free
+    =visual>
+        value =newscore
+    
     !eval! (>= (parse-integer =score) (parse-integer =newscore))
+    
     =retrieval>
         color =penaltycol
 ==>
     =goal>
         penaltycolor =penaltycol
-        score =newscore
 
         state move-to-goal
         intention scan-score-move-read-score2
@@ -1975,18 +2034,19 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     +visual-location>
         color =bodycol
         kind oval
-    !output! (parse-integer =newscore)
 )
 
 (p reward-tile-check2-not-target
     =goal>
         state move-to-goal
-        intention attend-score-not-target
-        ;rewardcolor unknown
+        intention scan-score-move-read-score-update-colors
+        rewardcolor unknown
+        penaltycolor unknown
         bodycolor =bodycol
         score =score
     =visual>
         value =newscore
+
     !eval! (< (parse-integer =score) (parse-integer =newscore))
 
     =retrieval>
@@ -2007,6 +2067,27 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
         kind oval
     !output! (parse-integer =newscore)
 
+)
+
+(p reward-penalty-known-reattend2
+    =goal>
+        state move-to-goal
+        intention scan-score-move-read-score-update-colors
+        - rewardcolor unknown
+        - penaltycolor unknown
+        bodycolor =bodycol
+        score =score
+    =visual>
+    =retrieval>
+
+==>
+    =goal>
+        state move-to-goal
+        intention scan-score-move-read-score2
+
+    +visual-location>
+        color =bodycol
+        kind oval
 )
 ;;;;;;;
 
@@ -2329,8 +2410,6 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     ?manual>
         state free
 
-
-
 ==>
     =goal>
         intention retrack
@@ -2346,11 +2425,10 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
         intention retrack
   
     =visual>
-    ;    state free
+   
     ?visual>
         state free
         processor free
-    ;=visual-location>
 
 ==>
     =goal>
@@ -2441,6 +2519,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     -   blockcolor unknown
         rewardcolor =rewardcol
         blockcolor =blockcol
+        ;intention find-direction
     =imaginal>
     -   tilecolor =bodycol
     -   tilecolor =goalcol
@@ -2451,8 +2530,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
 ==>
     =goal>
         penaltycolor =penaltycol
-        state find-goal
-        intention search
+    =imaginal>
 )
 
 (p i-am-looking-for-the-last-color-reward
@@ -2465,6 +2543,7 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     -   blockcolor unknown
         penaltycolor =penaltycol
 
+
     =imaginal>
     -   tilecolor =bodycol
     -   tilecolor =goalcol
@@ -2472,48 +2551,11 @@ goalcolor bodycolor rewardcolor penaltycolor blockcolor score)
     -   tilecolor =blockcol
         tilecolor =rewardcol
 
-    =retrieval>
-
     
 ==>
     =goal>
         rewardcolor =rewardcol
-         state find-goal
-        intention search
     =imaginal>
 )
 
-(p already-know-boni
-    =goal>
-        intention scan-bonus
-    -   rewardcolor unknown
-    -   penaltycolor unknown
-        bodycolor =bodycol
-    =retrieval>
-
-==>
-    =goal>
-        state i-am-this
-        intention locate
-    +visual-location>
-        kind oval
-        color =bodycol
-)
-
-(p reached-boni-but-know-reward
-    =goal>
-        intention scan-bonus
-    -   rewardcolor unknown
-    -   penaltycolor unknown
-        bodycolor =bodycol
-    =retrieval>
-
-==>
-    =goal>
-        state i-am-this
-        intention locate
-    +visual-location>
-        kind oval
-        color =bodycol
-)
 )
